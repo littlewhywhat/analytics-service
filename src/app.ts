@@ -15,35 +15,28 @@ app.get("/health", (c) =>
   }),
 );
 
-app.post(
-  "/extension-events",
-  zValidator("json", extensionPingSchema),
-  (c) => {
-    const payload = c.req.valid("json");
-    const projectToken = process.env.TELEMETRY_PROJECT_TOKEN;
+app.post("/extension-events", zValidator("json", extensionPingSchema), (c) => {
+  const payload = c.req.valid("json");
+  const projectToken = process.env.TELEMETRY_PROJECT_TOKEN;
 
-    if (!projectToken || payload.project_token !== projectToken) {
-      return c.json({ error: "Invalid project_token" }, 401);
-    }
+  if (!projectToken || payload.project_token !== projectToken) {
+    return c.json({ error: "Invalid project_token" }, 401);
+  }
 
-    if (!validatePingedAt(payload.pinged_at)) {
-      return c.json(
-        { error: "pinged_at outside acceptable time window" },
-        400,
-      );
-    }
+  if (!validatePingedAt(payload.pinged_at)) {
+    return c.json({ error: "pinged_at outside acceptable time window" }, 400);
+  }
 
-    const now = Date.now();
-    const event = {
-      ...payload,
-      bot_risk: computeBotRisk(payload),
-      received_at: now,
-    };
+  const now = Date.now();
+  const event = {
+    ...payload,
+    bot_risk: computeBotRisk(payload),
+    received_at: now,
+  };
 
-    console.log(JSON.stringify({ type: "extension_ping", event }));
+  console.log(JSON.stringify({ type: "extension_ping", event }));
 
-    return c.body(null, 204);
-  },
-);
+  return c.body(null, 204);
+});
 
 export default app;
