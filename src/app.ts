@@ -1,10 +1,10 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import {
-  computeBotRisk,
-  extensionPingSchema,
-  validatePingedAt,
-} from "./schemas/extensionPing";
+  extensionEventSchema,
+  toFlatRecord,
+  validateTimestamp,
+} from "./schemas/extensionEvent";
 
 const app = new Hono().basePath("/api");
 
@@ -15,26 +15,21 @@ app.get("/health", (c) =>
   }),
 );
 
-app.post("/extension-events", zValidator("json", extensionPingSchema), (c) => {
-  const payload = c.req.valid("json");
+app.post("/extension-events", zValidator("json", extensionEventSchema), (c) => {
+  const event = c.req.valid("json");
   const projectToken = process.env.TELEMETRY_PROJECT_TOKEN;
 
-  if (!projectToken || payload.project_token !== projectToken) {
-    return c.json({ error: "Invalid project_token" }, 401);
+  if (!projectToken || event.project_token !== projectToken) {
+    return c.json({ error: "invalid project_token" }, 401);
   }
 
-  if (!validatePingedAt(payload.pinged_at)) {
-    return c.json({ error: "pinged_at outside acceptable time window" }, 400);
+  if (!validateTimestamp(event.timestamp)) {
+    return c.json({ error: "timestamp outside acceptable window" }, 400);
   }
 
-  const now = Date.now();
-  const event = {
-    ...payload,
-    bot_risk: computeBotRisk(payload),
-    received_at: now,
-  };
+  const record = toFlatRecord(event, Date.now());
 
-  console.log(JSON.stringify({ type: "extension_ping", event }));
+  console.log(JSON.stringify(record));
 
   return c.body(null, 204);
 });
