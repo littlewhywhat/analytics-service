@@ -94,7 +94,6 @@ const computeBotRisk = (event: LifecycleEvent) => ({
 });
 
 export interface FlatRecord {
-  project_token: string;
   uuid: string;
   current_version: string;
   timestamp: number;
@@ -154,7 +153,6 @@ export const toFlatRecord = (
   received_at: number,
 ): FlatRecord => {
   const base = {
-    project_token: event.project_token,
     uuid: event.uuid,
     current_version: event.current_version,
     timestamp: event.timestamp,
