@@ -29,6 +29,7 @@ app.post("/extension-events", zValidator("json", extensionEventSchema), (c) => {
 
   const record = toFlatRecord(event, Date.now());
 
+  // TODO: add @aws-sdk/client-firehose, PUT record batch to stream
   console.log(JSON.stringify(record));
 
   return c.body(null, 204);

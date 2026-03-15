@@ -59,6 +59,7 @@ const userActionSchema = z.object({
     "enable_pin_replies",
     "disable_pin_replies",
   ]),
+  action_data: z.string().optional(),
 });
 
 export const extensionEventSchema = z.discriminatedUnion("event_type", [
@@ -122,6 +123,7 @@ export interface FlatRecord {
   bot_risk_uptime_suspicious: boolean | null;
 
   action: string | null;
+  action_data: string | null;
 }
 
 const EMPTY_LIFECYCLE = {
@@ -144,6 +146,7 @@ const EMPTY_LIFECYCLE = {
   bot_risk_headless: null,
   bot_risk_install_to_ping_fast: null,
   bot_risk_uptime_suspicious: null,
+  action_data: null,
 } as const;
 
 export const toFlatRecord = (
@@ -164,6 +167,7 @@ export const toFlatRecord = (
       ...base,
       ...EMPTY_LIFECYCLE,
       action: event.action,
+      action_data: event.action_data ?? null,
     };
   }
 
@@ -186,5 +190,6 @@ export const toFlatRecord = (
     language: event.language,
     ...computeBotRisk(event),
     action: null,
+    action_data: null,
   };
 };
