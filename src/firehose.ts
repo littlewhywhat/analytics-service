@@ -3,7 +3,7 @@ import {
   PutRecordCommand,
   type PutRecordCommandInput,
 } from "@aws-sdk/client-firehose";
-import type { FlatRecord } from "./schemas/extensionEvent";
+import type { FlatRecord } from "./schemas/extensionEvent.js";
 
 let client: FirehoseClient | null = null;
 

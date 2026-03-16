@@ -1,12 +1,12 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { sendToFirehose } from "./firehose";
+import { sendToFirehose } from "./firehose.js";
 import {
   extensionEventSchema,
   getEnv,
   toFlatRecord,
   validateTimestamp,
-} from "./schemas/extensionEvent";
+} from "./schemas/extensionEvent.js";
 
 const app = new Hono().basePath("/api");
 
