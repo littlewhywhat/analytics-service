@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { sendToFirehose } from "./firehose.js";
 import {
   extensionEventSchema,
@@ -9,6 +10,18 @@ import {
 } from "./schemas/extensionEvent.js";
 
 const app = new Hono().basePath("/api");
+
+app.use(
+  "*",
+  cors({
+    origin: (origin) =>
+      origin?.startsWith("chrome-extension://") ? origin : null,
+    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowHeaders: ["Content-Type"],
+  }),
+);
+
+app.options("/extension-events", (c) => c.body(null, 204));
 
 app.get("/health", (c) =>
   c.json({
