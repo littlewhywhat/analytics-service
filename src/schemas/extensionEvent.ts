@@ -93,7 +93,18 @@ const computeBotRisk = (event: LifecycleEvent) => ({
     event.uptime_ms < 0 || event.uptime_ms > UPTIME_MAX_REASONABLE_MS,
 });
 
+const TRIVIAL_PROJECT_TOKENS = new Set([
+  "dev",
+  "development",
+  "pub_dev",
+  "test",
+]);
+
+export const getEnv = (projectToken: string): "development" | "production" =>
+  TRIVIAL_PROJECT_TOKENS.has(projectToken) ? "development" : "production";
+
 export interface FlatRecord {
+  env: "development" | "production";
   uuid: string;
   current_version: string;
   timestamp: number;
@@ -151,8 +162,10 @@ const EMPTY_LIFECYCLE = {
 export const toFlatRecord = (
   event: ExtensionEvent,
   received_at: number,
+  env: "development" | "production",
 ): FlatRecord => {
   const base = {
+    env,
     uuid: event.uuid,
     current_version: event.current_version,
     timestamp: event.timestamp,
