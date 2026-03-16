@@ -93,15 +93,8 @@ const computeBotRisk = (event: LifecycleEvent) => ({
     event.uptime_ms < 0 || event.uptime_ms > UPTIME_MAX_REASONABLE_MS,
 });
 
-const TRIVIAL_PROJECT_TOKENS = new Set([
-  "dev",
-  "development",
-  "pub_dev",
-  "test",
-]);
-
-export const getEnv = (projectToken: string): "development" | "production" =>
-  TRIVIAL_PROJECT_TOKENS.has(projectToken) ? "development" : "production";
+export const getEnv = (): "development" | "production" =>
+  process.env.TELEMETRY_ENV === "development" ? "development" : "production";
 
 export interface FlatRecord {
   env: "development" | "production";

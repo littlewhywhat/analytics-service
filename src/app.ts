@@ -32,7 +32,7 @@ app.post(
       return c.json({ error: "timestamp outside acceptable window" }, 400);
     }
 
-    const env = getEnv(projectToken);
+    const env = getEnv();
     const record = toFlatRecord(event, Date.now(), env);
 
     const result = await sendToFirehose(record);
