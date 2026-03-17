@@ -91,7 +91,7 @@ export const toUninstallFlatRecord = (
   env,
   uuid: query.uuid,
   current_version: query.current_version,
-  timestamp: null,
+  timestamp: received_at,
   event_type: "uninstall",
   received_at,
   installed_at: query.installed_at,
@@ -155,7 +155,7 @@ export interface FlatRecord {
   env: "development" | "production";
   uuid: string;
   current_version: string;
-  timestamp: number | null;
+  timestamp: number;
   event_type: string;
   received_at: number;
 
