@@ -68,13 +68,20 @@ app.get("/uninstall", zValidator("query", uninstallQuerySchema), async (c) => {
   const query = c.req.valid("query");
   const projectToken = process.env.TELEMETRY_PROJECT_TOKEN;
 
+  console.log("[uninstall] received", {
+    uuid: query.uuid,
+    env: process.env.TELEMETRY_ENV,
+  });
+
   if (!projectToken || query.project_token !== projectToken) {
+    console.log("[uninstall] invalid project_token");
     return c.body("Bad request", 400);
   }
 
   const env = getEnv();
   const record = toUninstallFlatRecord(query, Date.now(), env);
-  await sendToFirehose(record);
+  const result = await sendToFirehose(record);
+  console.log("[uninstall] firehose result", result);
 
   return c.html(`<!DOCTYPE html>
 <html lang="en">
