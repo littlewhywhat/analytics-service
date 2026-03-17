@@ -62,6 +62,61 @@ const userActionSchema = z.object({
   action_data: z.string().optional(),
 });
 
+export const uninstallQuerySchema = z.object({
+  project_token: z.string().min(1),
+  uuid: z.string().regex(uuidv4Regex),
+  current_version: z.string(),
+  installed_at: z.coerce.number(),
+  installed_version: z.string(),
+  updated_at: z.coerce.number(),
+  updated_version: z.string(),
+  update_url: z.string().optional(),
+  last_pinged_at: z.coerce.number().nullable().optional(),
+  last_startup_at: z.coerce.number().nullable().optional(),
+  ping_sequence: z.coerce.number().int().min(0),
+  is_webdriver: z.coerce.boolean(),
+  is_headless: z.coerce.boolean(),
+  browser: z.string(),
+  platform: z.string(),
+  language: z.string(),
+});
+
+export type UninstallQuery = z.infer<typeof uninstallQuerySchema>;
+
+export const toUninstallFlatRecord = (
+  query: UninstallQuery,
+  received_at: number,
+  env: "development" | "production",
+): FlatRecord => ({
+  env,
+  uuid: query.uuid,
+  current_version: query.current_version,
+  timestamp: null,
+  event_type: "uninstall",
+  received_at,
+  installed_at: query.installed_at,
+  installed_version: query.installed_version,
+  updated_at: query.updated_at,
+  updated_version: query.updated_version,
+  update_url: query.update_url ?? null,
+  pinged_at: null,
+  last_pinged_at: query.last_pinged_at ?? null,
+  last_startup_at: query.last_startup_at ?? null,
+  ping_sequence: query.ping_sequence,
+  uptime_ms: null,
+  is_webdriver: query.is_webdriver,
+  is_headless: query.is_headless,
+  browser: query.browser,
+  platform: query.platform,
+  language: query.language,
+  bot_risk_webdriver: query.is_webdriver,
+  bot_risk_headless: query.is_headless,
+  bot_risk_install_to_ping_fast: null,
+  bot_risk_uptime_suspicious: null,
+  action: null,
+  action_data: null,
+});
+
 export const extensionEventSchema = z.discriminatedUnion("event_type", [
   pingSchema,
   installSchema,
@@ -100,7 +155,7 @@ export interface FlatRecord {
   env: "development" | "production";
   uuid: string;
   current_version: string;
-  timestamp: number;
+  timestamp: number | null;
   event_type: string;
   received_at: number;
 

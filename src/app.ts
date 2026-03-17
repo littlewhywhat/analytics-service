@@ -6,12 +6,14 @@ import {
   extensionEventSchema,
   getEnv,
   toFlatRecord,
+  toUninstallFlatRecord,
+  uninstallQuerySchema,
   validateTimestamp,
 } from "./schemas/extensionEvent.js";
 
-const app = new Hono().basePath("/api");
+const api = new Hono().basePath("/api");
 
-app.use(
+api.use(
   "*",
   cors({
     origin: (origin) =>
@@ -21,16 +23,16 @@ app.use(
   }),
 );
 
-app.options("/extension-events", (c) => c.body(null, 204));
+api.options("/extension-events", (c) => c.body(null, 204));
 
-app.get("/health", (c) =>
+api.get("/health", (c) =>
   c.json({
     status: "ok",
     timestamp: new Date().toISOString(),
   }),
 );
 
-app.post(
+api.post(
   "/extension-events",
   zValidator("json", extensionEventSchema),
   async (c) => {
@@ -57,5 +59,35 @@ app.post(
     return c.body(null, 204);
   },
 );
+
+const app = new Hono();
+
+app.route("/", api);
+
+app.get("/uninstall", zValidator("query", uninstallQuerySchema), async (c) => {
+  const query = c.req.valid("query");
+  const projectToken = process.env.TELEMETRY_PROJECT_TOKEN;
+
+  if (!projectToken || query.project_token !== projectToken) {
+    return c.body("Bad request", 400);
+  }
+
+  const env = getEnv();
+  const record = toUninstallFlatRecord(query, Date.now(), env);
+  sendToFirehose(record);
+
+  return c.html(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sorry to see you go</title>
+</head>
+<body>
+  <h1>Sorry to see you go</h1>
+  <p>Bulavka has been uninstalled. Thanks for trying it out.</p>
+</body>
+</html>`);
+});
 
 export default app;
