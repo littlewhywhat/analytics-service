@@ -74,7 +74,7 @@ app.get("/uninstall", zValidator("query", uninstallQuerySchema), async (c) => {
 
   const env = getEnv();
   const record = toUninstallFlatRecord(query, Date.now(), env);
-  sendToFirehose(record);
+  await sendToFirehose(record);
 
   return c.html(`<!DOCTYPE html>
 <html lang="en">
