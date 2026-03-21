@@ -11,6 +11,19 @@ import {
   validateTimestamp,
 } from "./schemas/extensionEvent.js";
 
+type ProjectRoutes = Record<string, string>;
+
+const parseProjectRoutes = (): ProjectRoutes => {
+  const raw = process.env.PROJECT_ROUTES;
+  if (!raw) return {};
+  return JSON.parse(raw) as ProjectRoutes;
+};
+
+const resolveStream = (projectToken: string): string | null => {
+  const routes = parseProjectRoutes();
+  return routes[projectToken] ?? null;
+};
+
 const api = new Hono().basePath("/api");
 
 api.use(
@@ -37,9 +50,9 @@ api.post(
   zValidator("json", extensionEventSchema),
   async (c) => {
     const event = c.req.valid("json");
-    const projectToken = process.env.TELEMETRY_PROJECT_TOKEN;
+    const streamName = resolveStream(event.project_token);
 
-    if (!projectToken || event.project_token !== projectToken) {
+    if (!streamName) {
       return c.json({ error: "invalid project_token" }, 401);
     }
 
@@ -50,7 +63,7 @@ api.post(
     const env = getEnv();
     const record = toFlatRecord(event, Date.now(), env);
 
-    const result = await sendToFirehose(record);
+    const result = await sendToFirehose(record, streamName);
     if (!result.ok) {
       console.error("Firehose send failed:", result.error);
       return c.json({ error: "ingestion failed" }, 500);
@@ -66,21 +79,21 @@ app.route("/", api);
 
 app.get("/uninstall", zValidator("query", uninstallQuerySchema), async (c) => {
   const query = c.req.valid("query");
-  const projectToken = process.env.TELEMETRY_PROJECT_TOKEN;
+  const streamName = resolveStream(query.project_token);
 
   console.log("[uninstall] received", {
     uuid: query.uuid,
     env: process.env.TELEMETRY_ENV,
   });
 
-  if (!projectToken || query.project_token !== projectToken) {
+  if (!streamName) {
     console.log("[uninstall] invalid project_token");
     return c.body("Bad request", 400);
   }
 
   const env = getEnv();
   const record = toUninstallFlatRecord(query, Date.now(), env);
-  const result = await sendToFirehose(record);
+  const result = await sendToFirehose(record, streamName);
   console.log("[uninstall] firehose result", result);
 
   return c.html(`<!DOCTYPE html>
@@ -92,7 +105,7 @@ app.get("/uninstall", zValidator("query", uninstallQuerySchema), async (c) => {
 </head>
 <body>
   <h1>Sorry to see you go</h1>
-  <p>Bulavka has been uninstalled. Thanks for trying it out.</p>
+  <p>The extension has been uninstalled. Thanks for trying it out.</p>
 </body>
 </html>`);
 });
