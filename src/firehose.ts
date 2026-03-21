@@ -10,18 +10,17 @@ let client: FirehoseClient | null = null;
 const getClient = (): FirehoseClient | null => {
   if (client) return client;
   const region = process.env.AWS_REGION;
-  const streamName = process.env.FIREHOSE_STREAM_NAME;
-  if (!region || !streamName) return null;
+  if (!region) return null;
   client = new FirehoseClient({ region });
   return client;
 };
 
 export const sendToFirehose = async (
   record: FlatRecord,
+  streamName: string,
 ): Promise<{ ok: true } | { ok: false; error: unknown }> => {
   const firehose = getClient();
-  const streamName = process.env.FIREHOSE_STREAM_NAME;
-  if (!firehose || !streamName) {
+  if (!firehose) {
     return { ok: false, error: new Error("Firehose not configured") };
   }
   const payload = JSON.stringify(record);

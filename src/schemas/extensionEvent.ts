@@ -49,16 +49,7 @@ const updateSchema = z.object({
 const userActionSchema = z.object({
   ...baseFields,
   event_type: z.literal("user_action"),
-  action: z.enum([
-    "pin_reply",
-    "unpin_reply",
-    "favourite_chat",
-    "unfavourite_chat",
-    "enable_favourites_chats",
-    "disable_favourites_chats",
-    "enable_pin_replies",
-    "disable_pin_replies",
-  ]),
+  action: z.string().min(1),
   action_data: z.string().optional(),
 });
 
